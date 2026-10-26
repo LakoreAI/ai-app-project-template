@@ -1,0 +1,44 @@
+# Draft for the app service (not run yet). Datasources: `docker compose up -d postgres`,
+# add `--profile milvus` for Milvus.
+services:
+  app:
+    build: .
+    profiles: ["app"]  # start with: docker compose --profile app up --build
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      POSTGRES_DSN: postgresql://app:app@postgres:5432/app
+      MILVUS_URI: http://milvus:19530
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  milvus:
+    image: milvusdb/milvus:v2.5.4
+    profiles: ["milvus"]  # heavier; start with: docker compose --profile milvus up -d
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_USE_EMBED: "true"
+      ETCD_DATA_DIR: /var/lib/milvus/etcd
+      COMMON_STORAGETYPE: local
+    ports:
+      - "19530:19530"
+    volumes:
+      - milvusdata:/var/lib/milvus
+
+volumes:
+  pgdata:
+  milvusdata:
