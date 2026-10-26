@@ -1,10 +1,10 @@
-.PHONY: install run test lint fmt up down
+.PHONY: install run test lint fmt up down docker-build docker-push
 
 install:
 	uv sync --extra datasources
 
 run:
-	uv run uvicorn src:app --reload
+	RELOAD=1 ./scripts/entrypoints.sh
 
 test:
 	uv run pytest
@@ -20,3 +20,9 @@ up:
 
 down:
 	docker compose --profile milvus --profile app down
+
+docker-build:
+	./scripts/docker-build.sh
+
+docker-push:
+	./scripts/docker-push.sh

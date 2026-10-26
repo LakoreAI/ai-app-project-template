@@ -13,7 +13,8 @@ with optional Postgres and Milvus datasources, prompt skills, and room for a fro
 ├── docs/            research docs, notes, analysis, reports (see docs/README.md)
 ├── notebooks/       exploration notebooks
 ├── tests/           pytest suite
-├── Dockerfile       draft image for the API
+├── scripts/         entrypoints.sh, docker-build.sh, docker-push.sh
+├── Dockerfile       multi-stage image for the API
 ├── docker-compose.yml   Postgres, Milvus (profile), app (profile, draft)
 └── Makefile         common commands
 ```
@@ -49,7 +50,18 @@ docker compose --profile app up --build        # API in a container (draft)
 
 Then set `POSTGRES_DSN=postgresql://app:app@localhost:5433/app` and
 `MILVUS_URI=http://localhost:19530` in `.env`. `make down` stops everything.
-The `Dockerfile` and the `app` service are drafts that have not been built.
+
+## Scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/entrypoints.sh` | run `src/` (`HOST`, `PORT`, `RELOAD=1`); also the container's CMD |
+| `scripts/docker-build.sh` | build the image (`IMAGE`, `TAG`) |
+| `scripts/docker-push.sh` | tag and push to `IMAGE_REPO` (required, e.g. `ghcr.io/<org>/<image>`) |
+
+The `Dockerfile` is multi-stage and ordered for layer caching, with a BuildKit cache mount for uv:
+dependencies are installed before the code is copied, so editing `src/` rebuilds in about a second.
+The `app` compose service is a draft.
 
 ## Development
 
