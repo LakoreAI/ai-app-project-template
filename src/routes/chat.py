@@ -13,9 +13,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 def chat(req: ChatRequest, request: Request) -> ChatResponse:
     service: ChatService = request.app.state.chat
     try:
-        return ChatResponse(answer=service.answer(req.prompt, req.skill))
-    except KeyError:
-        raise HTTPException(status_code=404, detail=f"unknown skill: {req.skill}") from None
+        return ChatResponse(answer=service.answer(req.prompt))
     except OpenAIError as e:
         logger.error("LLM call failed: %s", e)
         raise HTTPException(status_code=502, detail="LLM provider error") from e

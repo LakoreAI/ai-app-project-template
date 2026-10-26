@@ -9,23 +9,24 @@ src/
 ├── __init__.py      app factory + lifespan
 ├── config.py        Settings (pydantic-settings, reads .env)
 ├── routes/          API routers; each route calls a service
-├── services/        one folder per service: service.py + modules/ + utils/
+├── services/        one folder per service (service.py + utils/); it calls shared src/modules
 ├── models/          request/response schemas (pydantic)
-├── modules/         shared building blocks (BaseModules, BaseAgent, HealthModule, SkillModule)
+├── modules/         shared building blocks (BaseModules, LLM, agents + skills, HealthModule)
 ├── data/            datasources (DataSource, PostgresSource, MilvusSource, registry)
 ├── utils/           shared helpers (colored logger)
-└── assets/          static files, e.g. prompt skills
+└── assets/          static files: agent prompt_templates/ and skills/
 ```
 
 ## Flow
 
-`routes/*` -> `services/<name>/service.py` -> `modules/` (shared) + `services/<name>/modules/` (local)
-+ `data/` datasources + `utils/`.
+`routes/*` -> `services/<name>/service.py` -> `modules/` (LLM, agents, ...) + `data/` datasources + `utils/`.
+A service does not define modules itself; it calls the shared ones in `src/modules/`.
 
 ## Adding a feature
 
 1. Schemas in `models/<name>.py` (export them in `models/__init__.py`).
-2. `services/<name>/service.py` with a service class; local modules and utils beside it.
+2. `services/<name>/service.py` with a service class that calls modules from `src/modules/`; service-specific helpers go in
+   `services/<name>/utils/`.
 3. `routes/<name>.py` with an `APIRouter` that calls the service; include it in `routes/__init__.py`.
 4. If the service needs a datasource, pass it in from `src/__init__.py`; to monitor a new source, register a
    probe: `health.register("name", probe)`, where a probe raises when unhealthy.

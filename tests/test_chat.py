@@ -1,5 +1,6 @@
 from openai import OpenAIError
 
+from src.modules.agents.chat import ChatAgent
 from src.services.chat import ChatService
 
 
@@ -16,7 +17,7 @@ class FakeLLM:
 
 
 def use_llm(client, llm):
-    client.app.state.chat = ChatService(llm=llm)
+    client.app.state.chat = ChatService(agent=ChatAgent(llm=llm))
 
 
 def test_chat_ok(client):
@@ -26,18 +27,6 @@ def test_chat_ok(client):
     assert r.status_code == 200
     assert r.json() == {"answer": "hi"}
     assert llm.messages[-1] == {"role": "user", "content": "hello"}
-
-
-def test_chat_with_skill_uses_skill_prompt(client):
-    llm = FakeLLM()
-    use_llm(client, llm)
-    client.post("/chat", json={"prompt": "x", "skill": "summarize"})
-    assert "Summarize" in llm.messages[0]["content"]
-
-
-def test_chat_unknown_skill_is_404(client):
-    use_llm(client, FakeLLM())
-    assert client.post("/chat", json={"prompt": "x", "skill": "nope"}).status_code == 404
 
 
 def test_chat_provider_error_is_502(client):
